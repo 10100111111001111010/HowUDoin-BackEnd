@@ -1,4 +1,4 @@
-package main.java.edu.sabanciuniv.howudoin.exceptions;
+package edu.sabanciuniv.howudoin.exceptions;
 
 public class ResourceNotFoundException {
 }

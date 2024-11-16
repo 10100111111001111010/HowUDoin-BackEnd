@@ -1,4 +1,4 @@
-package main.java.edu.sabanciuniv.howudoin.security;
+package edu.sabanciuniv.howudoin.security;
 
 public class JsonWebTokenProvider {
 }

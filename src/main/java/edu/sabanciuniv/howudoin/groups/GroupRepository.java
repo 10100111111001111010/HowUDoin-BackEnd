@@ -1,4 +1,4 @@
-package main.java.edu.sabanciuniv.howudoin.groups;
+package edu.sabanciuniv.howudoin.groups;
 
 public class GroupRepository {
 }

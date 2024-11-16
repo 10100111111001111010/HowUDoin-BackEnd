@@ -1,4 +1,4 @@
-package main.java.edu.sabanciuniv.howudoin.users;
+package edu.sabanciuniv.howudoin.users;
 
 public class UserService {
 }
