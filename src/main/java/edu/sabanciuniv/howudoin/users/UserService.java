@@ -88,6 +88,14 @@ public class UserService
     }
 
     /**
+     * Checks if the email already exists.
+     */
+    public boolean existsByEmail(String email)
+    {
+        return userRepository.findByEmail(email) != null;
+    }
+
+    /**
      * Search for users by first name.
      */
     public List<UserModel> searchByFirstName(String firstName)
