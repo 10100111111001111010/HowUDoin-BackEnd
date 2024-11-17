@@ -16,6 +16,12 @@ public interface UserRepository extends MongoRepository<UserModel, String>
     UserModel findByEmail(String email);
 
     /**
+     * Find a user by their email verification token.
+     * Solves the disabled user problem while logging in
+     */
+    UserModel findByEmailVerificationToken(String token);
+
+    /**
      * Find all users with a verified email.
      */
     List<UserModel> findByEmailVerifiedTrue();

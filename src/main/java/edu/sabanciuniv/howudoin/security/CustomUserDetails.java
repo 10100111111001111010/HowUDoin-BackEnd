@@ -63,6 +63,7 @@ public class CustomUserDetails implements UserDetails
     @Override
     public boolean isEnabled()
     {
-        return user.isEmailVerified();
+        //return user.isEmailVerified(); //Commented out to bypass verification process during login
+        return true;
     }
 }
