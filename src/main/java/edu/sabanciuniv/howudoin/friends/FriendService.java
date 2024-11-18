@@ -1,5 +1,6 @@
 package edu.sabanciuniv.howudoin.friends;
 
+import edu.sabanciuniv.howudoin.users.UserModel;
 import edu.sabanciuniv.howudoin.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,12 @@ public class FriendService {
         }
 
         // Verify users aren't already friends
-        if (userRepository.findById(senderId).get().getFriendIds().contains(receiverId)) {
+        Optional<UserModel> sender = userRepository.findById(senderId);
+        if (!sender.isPresent())
+        {
+            throw new RuntimeException("Sender user not found");
+        }
+        if (sender.get().getFriendIds().contains(receiverId)) {
             throw new RuntimeException("Users are already friends");
         }
 
