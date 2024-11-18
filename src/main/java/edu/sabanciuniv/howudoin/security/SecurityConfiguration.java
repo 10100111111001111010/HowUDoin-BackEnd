@@ -1,6 +1,7 @@
 package edu.sabanciuniv.howudoin.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -19,9 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,6 +32,9 @@ public class SecurityConfiguration {
 
     private final JwtWebTokenAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImplementation userDetailsService;
+
+    @Value("${app.cors.allowed-origins:*}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -57,6 +58,11 @@ public class SecurityConfiguration {
                             String errorBody = String.format("{\"error\": \"%s\"}", authException.getMessage());
                             response.getOutputStream().write(errorBody.getBytes());
                         })
+                )
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives("script-src 'self'")
+                        )
                 );
 
         return http.build();
@@ -65,7 +71,13 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Collections.singletonList("*"));
+
+        if ("*".equals(allowedOrigins)) {
+            configuration.addAllowedOrigin("*");
+        } else {
+            configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        }
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
@@ -74,7 +86,8 @@ public class SecurityConfiguration {
                 "Accept",
                 "Origin",
                 "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
+                "Access-Control-Request-Headers",
+                "User-Id"
         ));
         configuration.setExposedHeaders(Collections.singletonList("Authorization"));
         configuration.setMaxAge(3600L);

@@ -5,63 +5,62 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service class handling user-related business logic including friend connections.
+ * Manages user CRUD operations and friendship relationships.
+ */
 @Service
-public class UserService
-{
+public class UserService {
     private final UserRepository userRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository)
-    {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     /**
      * Creates a new user.
-     * Validates if the email is taken before saving.
+     * Validates if the email is already taken before saving.
      */
-    public UserModel createUser(UserModel userModel)
-    {
-        if (userRepository.findByEmail(userModel.getEmail()) != null)
-        {
+    public UserModel createUser(UserModel userModel) {
+        if (userRepository.findByEmail(userModel.getEmail()) != null) {
             throw new IllegalArgumentException("A user with this email already exists.");
         }
-        userModel.setFriendIds(new ArrayList<>()); // Initialize empty friends list
+        // FriendConnections list is initialized in UserModel constructor
         return userRepository.save(userModel);
     }
 
     /**
-     * User getter by ID.
+     * Retrieves a user by their ID.
      */
-    public UserModel getUserById(String id)
-    {
+    public UserModel getUserById(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + id));
     }
 
     /**
-     * User getter by email.
+     * Retrieves a user by their email address.
      */
-    public UserModel getUserByEmail(String email)
-    {
+    public UserModel getUserByEmail(String email) {
         UserModel user = userRepository.findByEmail(email);
-        if (user == null)
-        {
+        if (user == null) {
             throw new IllegalArgumentException("User not found with email: " + email);
         }
         return user;
     }
 
-    public UserModel findByEmailVerificationToken(String token)
-    {
+    /**
+     * Finds a user by their email verification token.
+     */
+    public UserModel findByEmailVerificationToken(String token) {
         return userRepository.findByEmailVerificationToken(token);
     }
 
     /**
-     * Update a user's information.
+     * Updates user information.
+     * Maintains existing friend connections while updating other fields.
      */
-    public UserModel updateUser(String id, UserModel updatedUser)
-    {
+    public UserModel updateUser(String id, UserModel updatedUser) {
         UserModel existingUser = getUserById(id);
 
         existingUser.setFirstName(updatedUser.getFirstName());
@@ -73,167 +72,129 @@ public class UserService
     }
 
     /**
-     * Delete a user by ID.
+     * Deletes a user and removes all their friend connections.
      */
-    public void deleteUser(String id)
-    {
-        if (!userRepository.existsById(id))
-        {
+    public void deleteUser(String id) {
+        if (!userRepository.existsById(id)) {
             throw new IllegalArgumentException("User not found with ID: " + id);
         }
-        // Remove user from all friends lists before deletion
+
+        // Remove user from all friend connections before deletion
         UserModel user = getUserById(id);
-        if (user.getFriendIds() != null && !user.getFriendIds().isEmpty())
-        {
-            for (String friendId : user.getFriendIds())
-            {
-                removeFriendship(id, friendId);
+        if (!user.getFriendConnections().isEmpty()) {
+            for (UserModel.FriendConnection friendConnection : user.getFriendConnections()) {
+                removeFriendship(id, friendConnection.getFriendId());
             }
         }
         userRepository.deleteById(id);
     }
 
     /**
-     * Retrieve all users with a verified email.
+     * Retrieves all users with verified email addresses.
      */
-    public List<UserModel> getVerifiedUsers()
-    {
+    public List<UserModel> getVerifiedUsers() {
         return userRepository.findByEmailVerifiedTrue();
     }
 
     /**
-     * Checks if the email already exists.
+     * Checks if a user exists with the given email.
      */
-    public boolean existsByEmail(String email)
-    {
+    public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email) != null;
     }
 
     /**
-     * Search for users by first name.
+     * Searches for users by first name.
      */
-    public List<UserModel> searchByFirstName(String firstName)
-    {
+    public List<UserModel> searchByFirstName(String firstName) {
         return userRepository.findByFirstName(firstName);
     }
 
     /**
-     * Search for users by last name (case-insensitive).
+     * Searches for users by last name (case-insensitive).
      */
-    public List<UserModel> searchByLastName(String lastName)
-    {
+    public List<UserModel> searchByLastName(String lastName) {
         return userRepository.findByLastNameContainingIgnoreCase(lastName);
     }
 
-    // Friend-related methods
-
     /**
-     * Get all friends of a user.
-     * @param userId The ID of the user
-     * @return List of users who are friends with the specified user
-     * @throws IllegalArgumentException if user not found
+     * Gets all accepted friends of a user.
      */
-    public List<UserModel> getUserFriends(String userId)
-    {
+    public List<UserModel> getUserFriends(String userId) {
         UserModel user = getUserById(userId);
-        if (user.getFriendIds() == null || user.getFriendIds().isEmpty())
-        {
-            return new ArrayList<>();
-        }
-        return userRepository.findByIdIn(user.getFriendIds());
+        List<String> acceptedFriendIds = user.getFriendConnections().stream()
+                .filter(conn -> conn.getStatus() == UserModel.FriendStatus.ACCEPTED)
+                .map(UserModel.FriendConnection::getFriendId)
+                .toList();
+
+        return userRepository.findByIdIn(acceptedFriendIds);
     }
 
     /**
-     * Add a friend relationship between two users.
-     * @param userId1 First user's ID
-     * @param userId2 Second user's ID
-     * @throws IllegalArgumentException if either user not found
+     * Creates a bi-directional friendship between two users.
      */
-    public void addFriendship(String userId1, String userId2)
-    {
-        if (userId1.equals(userId2))
-        {
+    public void addFriendship(String userId1, String userId2) {
+        if (userId1.equals(userId2)) {
             throw new IllegalArgumentException("A user cannot be friends with themselves");
         }
 
         UserModel user1 = getUserById(userId1);
         UserModel user2 = getUserById(userId2);
 
-        // Initialize friend lists if null
-        if (user1.getFriendIds() == null)
-        {
-            user1.setFriendIds(new ArrayList<>());
-        }
-        if (user2.getFriendIds() == null)
-        {
-            user2.setFriendIds(new ArrayList<>());
-        }
-
-        // Add the friendship in both directions if not already friends
-        if (!user1.getFriendIds().contains(userId2))
-        {
-            user1.getFriendIds().add(userId2);
+        // Add friendship connection for both users
+        if (!user1.hasFriendConnection(userId2)) {
+            user1.addFriendConnection(userId2);
+            user1.updateFriendStatus(userId2, UserModel.FriendStatus.ACCEPTED);
             userRepository.save(user1);
         }
-        if (!user2.getFriendIds().contains(userId1))
-        {
-            user2.getFriendIds().add(userId1);
+
+        if (!user2.hasFriendConnection(userId1)) {
+            user2.addFriendConnection(userId1);
+            user2.updateFriendStatus(userId1, UserModel.FriendStatus.ACCEPTED);
             userRepository.save(user2);
         }
     }
 
     /**
-     * Remove a friend relationship between two users.
-     * @param userId1 First user's ID
-     * @param userId2 Second user's ID
-     * @throws IllegalArgumentException if either user not found
+     * Removes a friendship connection between two users.
      */
-    public void removeFriendship(String userId1, String userId2)
-    {
+    public void removeFriendship(String userId1, String userId2) {
         UserModel user1 = getUserById(userId1);
         UserModel user2 = getUserById(userId2);
 
-        // Remove the friendship in both directions
-        if (user1.getFriendIds() != null)
-        {
-            user1.getFriendIds().remove(userId2);
-            userRepository.save(user1);
-        }
-        if (user2.getFriendIds() != null)
-        {
-            user2.getFriendIds().remove(userId1);
-            userRepository.save(user2);
-        }
+        // Remove both users' friend connections
+        user1.getFriendConnections().removeIf(conn -> conn.getFriendId().equals(userId2));
+        user2.getFriendConnections().removeIf(conn -> conn.getFriendId().equals(userId1));
+
+        userRepository.save(user1);
+        userRepository.save(user2);
     }
 
     /**
-     * Check if two users are friends.
-     * @param userId1 First user's ID
-     * @param userId2 Second user's ID
-     * @return true if users are friends, false otherwise
-     * @throws IllegalArgumentException if either user not found
+     * Checks if two users are accepted friends.
      */
-    public boolean areFriends(String userId1, String userId2)
-    {
+    public boolean areFriends(String userId1, String userId2) {
         UserModel user = getUserById(userId1);
-        return user.getFriendIds() != null && user.getFriendIds().contains(userId2);
+        return user.getFriendConnections().stream()
+                .anyMatch(conn ->
+                        conn.getFriendId().equals(userId2) &&
+                                conn.getStatus() == UserModel.FriendStatus.ACCEPTED);
     }
 
     /**
-     * Get friend suggestions for a user.
-     * Returns verified users who are not currently friends with the specified user.
-     * @param userId The ID of the user
-     * @return List of suggested users
-     * @throws IllegalArgumentException if user not found
+     * Gets friend suggestions for a user.
+     * Returns verified users who are not currently connected.
      */
-    public List<UserModel> getFriendSuggestions(String userId)
-    {
+    public List<UserModel> getFriendSuggestions(String userId) {
         UserModel user = getUserById(userId);
+        List<String> connectedIds = user.getFriendConnections().stream()
+                .map(UserModel.FriendConnection::getFriendId)
+                .toList();
+
         List<UserModel> suggestions = getVerifiedUsers();
         suggestions.removeIf(u ->
-                u.getId().equals(userId) ||
-                        (user.getFriendIds() != null && user.getFriendIds().contains(u.getId()))
-        );
+                u.getId().equals(userId) || connectedIds.contains(u.getId()));
+
         return suggestions;
     }
 }
