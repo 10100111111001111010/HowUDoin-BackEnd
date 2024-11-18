@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -18,6 +17,8 @@ public class UserController
     {
         this.userService = userService;
     }
+
+    // Existing endpoints
 
     /**
      * Creates a new user.
@@ -53,16 +54,20 @@ public class UserController
         }
     }
 
+    // Keep all your existing endpoints...
+
+    // New friend-related endpoints
+
     /**
-     * User getter by email.
+     * Get all friends of a user
      */
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserModel> getUserByEmail(@PathVariable String email)
+    @GetMapping("/{id}/friends")
+    public ResponseEntity<List<UserModel>> getUserFriends(@PathVariable String id)
     {
         try
         {
-            UserModel user = userService.getUserByEmail(email);
-            return new ResponseEntity<>(user, HttpStatus.OK);
+            List<UserModel> friends = userService.getUserFriends(id);
+            return new ResponseEntity<>(friends, HttpStatus.OK);
         }
         catch (IllegalArgumentException exception)
         {
@@ -71,32 +76,15 @@ public class UserController
     }
 
     /**
-     * Update a user's information.
+     * Add a friend relationship
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<UserModel> updateUser(@PathVariable String id, @RequestBody UserModel updatedUser)
+    @PostMapping("/{id1}/friends/{id2}")
+    public ResponseEntity<Void> addFriend(@PathVariable String id1, @PathVariable String id2)
     {
         try
         {
-            UserModel user = userService.updateUser(id, updatedUser);
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        }
-        catch (IllegalArgumentException exception)
-        {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * Delete a user by ID.
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id)
-    {
-        try
-        {
-            userService.deleteUser(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            userService.addFriendship(id1, id2);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
         catch (IllegalArgumentException exception)
         {
@@ -105,32 +93,53 @@ public class UserController
     }
 
     /**
-     * Get all users with a verified email.
+     * Remove a friend relationship
      */
-    @GetMapping("/verified")
-    public ResponseEntity<List<UserModel>> getVerifiedUsers()
+    @DeleteMapping("/{id1}/friends/{id2}")
+    public ResponseEntity<Void> removeFriend(@PathVariable String id1, @PathVariable String id2)
     {
-        List<UserModel> verifiedUsers = userService.getVerifiedUsers();
-        return new ResponseEntity<>(verifiedUsers, HttpStatus.OK);
+        try
+        {
+            userService.removeFriendship(id1, id2);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        catch (IllegalArgumentException exception)
+        {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
-     * Search for users by first name.
+     * Get friend suggestions for a user
      */
-    @GetMapping("/search/first-name")
-    public ResponseEntity<List<UserModel>> searchByFirstName(@RequestParam String firstName)
+    @GetMapping("/{id}/friend-suggestions")
+    public ResponseEntity<List<UserModel>> getFriendSuggestions(@PathVariable String id)
     {
-        List<UserModel> users = userService.searchByFirstName(firstName);
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        try
+        {
+            List<UserModel> suggestions = userService.getFriendSuggestions(id);
+            return new ResponseEntity<>(suggestions, HttpStatus.OK);
+        }
+        catch (IllegalArgumentException exception)
+        {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
-     * Search for users by last name (case-insensitive).
+     * Check if two users are friends
      */
-    @GetMapping("/search/last-name")
-    public ResponseEntity<List<UserModel>> searchByLastName(@RequestParam String lastName)
+    @GetMapping("/{id1}/friends/{id2}/status")
+    public ResponseEntity<Boolean> checkFriendship(@PathVariable String id1, @PathVariable String id2)
     {
-        List<UserModel> users = userService.searchByLastName(lastName);
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        try
+        {
+            boolean areFriends = userService.areFriends(id1, id2);
+            return new ResponseEntity<>(areFriends, HttpStatus.OK);
+        }
+        catch (IllegalArgumentException exception)
+        {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
 }
