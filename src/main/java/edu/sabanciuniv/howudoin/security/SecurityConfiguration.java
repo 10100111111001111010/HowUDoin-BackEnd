@@ -42,9 +42,10 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/auth/**").permitAll() // Authentication and registration endpoints
+                        .requestMatchers("/error").permitAll() // Error endpoint
+                        .requestMatchers("/api/friends/add/**").permitAll()//.authenticated() // Explicitly secure friend request endpoint
+                        .anyRequest().authenticated() // Secure all other endpoints
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
