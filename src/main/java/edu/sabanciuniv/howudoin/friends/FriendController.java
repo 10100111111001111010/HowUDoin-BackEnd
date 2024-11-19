@@ -17,7 +17,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/friends")
 @RequiredArgsConstructor
-public class FriendController {
+public class FriendController
+{
     private final FriendService friendService;
     private final UserService userService;
 
@@ -27,16 +28,21 @@ public class FriendController {
     @PostMapping("/add/{receiverId}")
     public ResponseEntity<FriendRequestModel> sendFriendRequest(
             @PathVariable String receiverId,
-            Authentication authentication) {
-        try {
+            Authentication authentication)
+    {
+        try
+        {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             String senderId = userDetails.getUserId();
 
             userService.getUserById(senderId);
             userService.getUserById(receiverId);
+
             FriendRequestModel request = friendService.sendFriendRequest(senderId, receiverId);
             return new ResponseEntity<>(request, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException exception)
+        {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -47,13 +53,16 @@ public class FriendController {
     @PostMapping("/accept/{requestId}")
     public ResponseEntity<ApiResponse> acceptFriendRequest(
             @PathVariable String requestId,
-            @RequestHeader("User-Id") String userId) {
-        try {
+            @RequestHeader("User-Id") String userId)
+    {
+        try
+        {
             FriendRequestModel request = friendService.acceptFriendRequest(requestId, userId);
             userService.addFriendship(request.getSenderId(), request.getReceiverId());
             return ResponseEntity.ok(new ApiResponse(true, "Friend request accepted"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        } catch (RuntimeException exception)
+        {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, exception.getMessage()));
         }
     }
 
@@ -61,11 +70,15 @@ public class FriendController {
      * Get the list of current friends for a user
      */
     @GetMapping
-    public ResponseEntity<List<UserModel>> getFriends(@RequestHeader("User-Id") String userId) {
-        try {
+    public ResponseEntity<List<UserModel>> getFriends(@RequestHeader("User-Id") String userId)
+    {
+        try
+        {
             List<UserModel> friends = userService.getUserFriends(userId);
             return new ResponseEntity<>(friends, HttpStatus.OK);
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException exception)
+        {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -75,11 +88,15 @@ public class FriendController {
      */
     @GetMapping("/requests/pending")
     public ResponseEntity<List<FriendRequestModel>> getPendingRequests(
-            @RequestHeader("User-Id") String userId) {
-        try {
+            @RequestHeader("User-Id") String userId)
+    {
+        try
+        {
             List<FriendRequestModel> requests = friendService.getPendingRequests(userId);
             return new ResponseEntity<>(requests, HttpStatus.OK);
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException exception)
+        {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
