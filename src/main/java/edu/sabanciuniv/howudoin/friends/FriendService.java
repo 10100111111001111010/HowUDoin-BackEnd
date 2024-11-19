@@ -1,6 +1,5 @@
 package edu.sabanciuniv.howudoin.friends;
 
-import edu.sabanciuniv.howudoin.users.UserModel;
 import edu.sabanciuniv.howudoin.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,21 +10,25 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class FriendService {
+public class FriendService
+{
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
 
     /**
      * Sends a friend request from one user to another
      */
-    public FriendRequestModel sendFriendRequest(String senderId, String receiverId) {
+    public FriendRequestModel sendFriendRequest(String senderId, String receiverId)
+    {
         // Check if users exist
-        if (!userRepository.existsById(senderId) || !userRepository.existsById(receiverId)) {
+        if (!userRepository.existsById(senderId) || !userRepository.existsById(receiverId))
+        {
             throw new RuntimeException("One or both users not found");
         }
 
         // Check if sender and receiver are the same
-        if (senderId.equals(receiverId)) {
+        if (senderId.equals(receiverId))
+        {
             throw new RuntimeException("Cannot send friend request to yourself");
         }
 
@@ -33,12 +36,15 @@ public class FriendService {
         Optional<FriendRequestModel> existingRequest = friendRepository
                 .findBySenderIdAndReceiverId(senderId, receiverId);
 
-        if (existingRequest.isPresent()) {
+        if (existingRequest.isPresent())
+        {
             FriendRequestModel request = existingRequest.get();
-            if (request.getStatus() == FriendRequestModel.RequestStatus.PENDING) {
-                throw new RuntimeException("Friend request already pending");
+            if (request.getStatus() == FriendRequestModel.RequestStatus.PENDING)
+            {
+                throw new RuntimeException("Friend request pending");
             }
-            if (request.getStatus() == FriendRequestModel.RequestStatus.ACCEPTED) {
+            if (request.getStatus() == FriendRequestModel.RequestStatus.ACCEPTED)
+            {
                 throw new RuntimeException("Users are already friends");
             }
         }
@@ -56,8 +62,10 @@ public class FriendService {
     /**
      * Gets all pending friend requests for a user
      */
-    public List<FriendRequestModel> getPendingRequests(String userId) {
-        if (!userRepository.existsById(userId)) {
+    public List<FriendRequestModel> getPendingRequests(String userId)
+    {
+        if (!userRepository.existsById(userId))
+        {
             throw new RuntimeException("User not found");
         }
         return friendRepository.findByReceiverIdAndStatus(userId, FriendRequestModel.RequestStatus.PENDING);
@@ -66,20 +74,22 @@ public class FriendService {
     /**
      * Accepts a friend request
      */
-    public FriendRequestModel acceptFriendRequest(String requestId, String userId) {
+    public FriendRequestModel acceptFriendRequest(String requestId, String userId)
+    {
         FriendRequestModel request = friendRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Friend request not found"));
 
         // Verify receiver is accepting
-        if (!request.getReceiverId().equals(userId)) {
+        if (!request.getReceiverId().equals(userId))
+        {
             throw new RuntimeException("Not authorized to accept this request");
         }
 
         // Verify request is pending
-        if (request.getStatus() != FriendRequestModel.RequestStatus.PENDING) {
+        if (request.getStatus() != FriendRequestModel.RequestStatus.PENDING)
+        {
             throw new RuntimeException("Request is not pending");
         }
-
         // Accept request
         request.setStatus(FriendRequestModel.RequestStatus.ACCEPTED);
         request.setUpdatedAt(LocalDateTime.now());
@@ -91,10 +101,12 @@ public class FriendService {
     /**
      * Gets friendship status between two users
      */
-    public boolean areFriends(String user1Id, String user2Id) {
+    public boolean areFriends(String user1Id, String user2Id)
+    {
         Optional<FriendRequestModel> request = friendRepository.findBySenderIdAndReceiverId(user1Id, user2Id);
 
-        if (request.isPresent()) {
+        if (request.isPresent())
+        {
             return request.get().getStatus() == FriendRequestModel.RequestStatus.ACCEPTED;
         }
 

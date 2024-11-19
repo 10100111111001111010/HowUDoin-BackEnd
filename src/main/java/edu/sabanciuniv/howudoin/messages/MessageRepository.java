@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface MessageRepository extends MongoRepository<MessageModel, String> {
+public interface MessageRepository extends MongoRepository<MessageModel, String>
+{
 
     // Find messages between two users (conversation history)
     @Query("{ $or: [ " +
