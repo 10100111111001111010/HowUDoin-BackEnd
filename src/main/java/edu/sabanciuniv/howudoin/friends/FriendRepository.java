@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FriendRepository extends MongoRepository<FriendRequestModel, String> {
+public interface FriendRepository extends MongoRepository<FriendRequestModel, String>
+{
     Optional<FriendRequestModel> findBySenderIdAndReceiverId(String senderId, String receiverId);
     List<FriendRequestModel> findByReceiverIdAndStatus(String receiverId, FriendRequestModel.RequestStatus status);
 }
