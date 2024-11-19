@@ -44,7 +44,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Authentication and registration endpoints
                         .requestMatchers("/error").permitAll() // Error endpoint
-                        .requestMatchers("/api/friends/add/**").permitAll()//.authenticated() // Explicitly secure friend request endpoint
+                        .requestMatchers("/api/friends/add/**").authenticated() // Explicitly secure friend request endpoint
                         .anyRequest().authenticated() // Secure all other endpoints
                 )
                 .sessionManagement(session -> session

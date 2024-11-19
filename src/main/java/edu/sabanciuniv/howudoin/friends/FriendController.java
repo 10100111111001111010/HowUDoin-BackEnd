@@ -3,10 +3,14 @@ package edu.sabanciuniv.howudoin.friends;
 import edu.sabanciuniv.howudoin.security.DTO.ApiResponse;
 import edu.sabanciuniv.howudoin.users.UserModel;
 import edu.sabanciuniv.howudoin.users.UserService;
+import edu.sabanciuniv.howudoin.security.CustomUserDetails;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -23,8 +27,11 @@ public class FriendController {
     @PostMapping("/add/{receiverId}")
     public ResponseEntity<FriendRequestModel> sendFriendRequest(
             @PathVariable String receiverId,
-            @RequestHeader("User-Id") String senderId) {
+            Authentication authentication) {
         try {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            String senderId = userDetails.getUserId();
+
             userService.getUserById(senderId);
             userService.getUserById(receiverId);
             FriendRequestModel request = friendService.sendFriendRequest(senderId, receiverId);
