@@ -18,8 +18,6 @@ public class UserController
         this.userService = userService;
     }
 
-    // Existing endpoints
-
     /**
      * Creates a new user.
      */
@@ -53,10 +51,6 @@ public class UserController
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
-
-    // Keep all your existing endpoints...
-
-    // New friend-related endpoints
 
     /**
      * Get all friends of a user

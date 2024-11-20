@@ -27,7 +27,7 @@ public class MessageService
         // Validate users exist and are friends
         if (!userService.areFriends(senderId, receiverId))
         {
-            throw new IllegalStateException("Whoops! Looks like you need to be friends with this user to message them.");
+            throw new IllegalStateException("You need to be friends with this user to message them!");
         }
 
         MessageModel message = new MessageModel();

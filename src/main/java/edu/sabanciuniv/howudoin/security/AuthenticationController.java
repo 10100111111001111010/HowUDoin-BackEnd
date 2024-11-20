@@ -69,7 +69,7 @@ public class AuthenticationController
         user.setLastName(signUpRequest.getLastName());
         user.setEmailVerified(false);
 
-        // Generate verification token (you can use UUID or any other token generation method)
+        // Generate verification token
         String verificationToken = UUID.randomUUID().toString();
         user.setEmailVerificationToken(verificationToken);
 
