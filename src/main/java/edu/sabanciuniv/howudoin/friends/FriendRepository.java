@@ -10,4 +10,5 @@ public interface FriendRepository extends MongoRepository<FriendRequestModel, St
 {
     Optional<FriendRequestModel> findBySenderIdAndReceiverId(String senderId, String receiverId);
     List<FriendRequestModel> findByReceiverIdAndStatus(String receiverId, FriendRequestModel.RequestStatus status);
+    List<FriendRequestModel> findBySenderId(String senderId);
 }

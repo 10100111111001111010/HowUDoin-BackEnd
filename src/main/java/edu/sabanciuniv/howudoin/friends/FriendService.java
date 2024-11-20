@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,7 +69,19 @@ public class FriendService
         {
             throw new RuntimeException("User not found");
         }
-        return friendRepository.findByReceiverIdAndStatus(userId, FriendRequestModel.RequestStatus.PENDING);
+
+        List<FriendRequestModel> pendingRequests = new ArrayList<FriendRequestModel>();
+
+        List<FriendRequestModel> requestModel = friendRepository.findBySenderId(userId);
+
+        for (FriendRequestModel request : requestModel) {
+            if (request.isPending()) {
+                pendingRequests.add(request);
+            }
+        }
+
+        return pendingRequests;
+//        return friendRepository.findByReceiverIdAndStatus(userId, FriendRequestModel.RequestStatus.PENDING);
     }
 
     /**
