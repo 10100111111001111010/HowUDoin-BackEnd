@@ -4,6 +4,7 @@ import edu.sabanciuniv.howudoin.security.DTO.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import org.apache.logging.log4j.message.Message;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -17,15 +18,17 @@ public class MessageController
 {
     private final MessageService messageService;
 
+    // It was harder to send message in the body with String type
+    // put content into a "MessageModel" class for easier json request
     @PostMapping("/send/{receiverId}")
     public ResponseEntity<?> sendMessage(
             @PathVariable String receiverId,
-            @RequestBody String content,
+            @RequestBody MessageModel messageModel,
             @RequestHeader("User-Id") String senderId)
     {
         try
         {
-            MessageModel message = messageService.sendMessage(senderId, receiverId, content);
+            MessageModel message = messageService.sendMessage(senderId, receiverId, messageModel.getContent());
             return new ResponseEntity<>(message, HttpStatus.CREATED);
         }
         catch (IllegalStateException | IllegalArgumentException exception)
