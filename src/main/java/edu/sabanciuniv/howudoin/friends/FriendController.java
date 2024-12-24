@@ -15,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/friends")
@@ -93,6 +92,8 @@ public class FriendController
     public ResponseEntity<List<FriendRequestModel>> getPendingRequests(
             @RequestHeader("User-Id") String userId)
     {
+        System.out.println("Received User-Id: " + userId);
+
         try
         {
             List<FriendRequestModel> requests = friendService.getPendingRequests(userId);

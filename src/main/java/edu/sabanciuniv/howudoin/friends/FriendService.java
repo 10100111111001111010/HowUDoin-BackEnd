@@ -69,19 +69,7 @@ public class FriendService
         {
             throw new RuntimeException("User not found");
         }
-
-        List<FriendRequestModel> pendingRequests = new ArrayList<FriendRequestModel>();
-
-        List<FriendRequestModel> requestModel = friendRepository.findBySenderId(userId);
-
-        for (FriendRequestModel request : requestModel) {
-            if (request.isPending()) {
-                pendingRequests.add(request);
-            }
-        }
-
-        return pendingRequests;
-//        return friendRepository.findByReceiverIdAndStatus(userId, FriendRequestModel.RequestStatus.PENDING);
+        return friendRepository.findByReceiverIdAndStatus(userId, FriendRequestModel.RequestStatus.PENDING);
     }
 
     /**
