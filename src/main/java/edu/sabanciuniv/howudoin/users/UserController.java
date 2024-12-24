@@ -136,4 +136,16 @@ public class UserController
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
+    /**
+     * Fetches all users from the database.
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<UserModel>> getAllUsers() {
+        try {
+            List<UserModel> users = userService.getAllUsers();
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

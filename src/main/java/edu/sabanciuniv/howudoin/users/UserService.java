@@ -197,4 +197,22 @@ public class UserService {
 
         return suggestions;
     }
+
+    /**
+     * Prevents sensitive user data from being exposed.
+     */
+    private UserModel sanitizeUserData(UserModel user) {
+        user.setPassword(null);
+        return user;
+    }
+
+    /**
+     * Retrieves all users from the database.
+     * Returns sanitized user data for security.
+     */
+    public List<UserModel> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::sanitizeUserData)
+                .toList();
+    }
 }

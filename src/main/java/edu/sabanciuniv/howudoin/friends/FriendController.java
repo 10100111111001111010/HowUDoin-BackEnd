@@ -12,7 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/friends")
@@ -98,6 +101,27 @@ public class FriendController
         catch (RuntimeException exception)
         {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/status/{userId}")
+    public ResponseEntity<Map<String, String>> getFriendshipStatus(
+            @PathVariable String userId,
+            Authentication authentication) {
+        try {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            String currentUserId = userDetails.getUserId();
+
+            boolean areFriends = friendService.areFriends(currentUserId, userId);
+
+            String status = areFriends ? "ACCEPTED" : "NONE";
+
+            Map<String, String> response = new HashMap<>();
+            response.put("status", status);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

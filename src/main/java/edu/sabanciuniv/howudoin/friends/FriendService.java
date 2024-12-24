@@ -114,17 +114,26 @@ public class FriendService
     /**
      * Gets friendship status between two users
      */
-    public boolean areFriends(String user1Id, String user2Id)
+    public String getFriendshipStatus(String user1Id, String user2Id)
     {
         Optional<FriendRequestModel> request = friendRepository.findBySenderIdAndReceiverId(user1Id, user2Id);
 
         if (request.isPresent())
         {
-            return request.get().getStatus() == FriendRequestModel.RequestStatus.ACCEPTED;
+            return request.get().getStatus().toString();
         }
 
         request = friendRepository.findBySenderIdAndReceiverId(user2Id, user1Id);
-        return request.map(req -> req.getStatus() == FriendRequestModel.RequestStatus.ACCEPTED)
-                .orElse(false);
+        return request.map(req -> req.getStatus().toString())
+                .orElse("NONE");
+    }
+
+    /**
+     * Checks if two users are friends
+     */
+    public boolean areFriends(String user1Id, String user2Id)
+    {
+        String status = getFriendshipStatus(user1Id, user2Id);
+        return status.equals("ACCEPTED");
     }
 }
