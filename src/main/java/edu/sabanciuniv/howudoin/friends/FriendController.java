@@ -71,7 +71,7 @@ public class FriendController
     /**
      * Get the list of current friends for a user
      */
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<UserModel>> getFriends(@RequestHeader("User-Id") String userId)
     {
         try
