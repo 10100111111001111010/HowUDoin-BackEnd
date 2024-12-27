@@ -102,18 +102,19 @@ public class FriendService
     /**
      * Gets friendship status between two users
      */
-    public String getFriendshipStatus(String user1Id, String user2Id)
-    {
+    public String getFriendshipStatus(String user1Id, String user2Id) {
         Optional<FriendRequestModel> request = friendRepository.findBySenderIdAndReceiverId(user1Id, user2Id);
-
-        if (request.isPresent())
-        {
+        if (request.isPresent()) {
             return request.get().getStatus().toString();
         }
 
+        // Check reverse direction
         request = friendRepository.findBySenderIdAndReceiverId(user2Id, user1Id);
-        return request.map(req -> req.getStatus().toString())
-                .orElse("NONE");
+        if (request.isPresent()) {
+            return request.get().getStatus().toString();
+        }
+
+        return "NONE";
     }
 
     /**

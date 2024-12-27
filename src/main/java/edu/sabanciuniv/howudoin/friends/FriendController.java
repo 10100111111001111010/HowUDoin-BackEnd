@@ -113,9 +113,7 @@ public class FriendController
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             String currentUserId = userDetails.getUserId();
 
-            boolean areFriends = friendService.areFriends(currentUserId, userId);
-
-            String status = areFriends ? "ACCEPTED" : "NONE";
+            String status = friendService.getFriendshipStatus(currentUserId, userId);
 
             Map<String, String> response = new HashMap<>();
             response.put("status", status);
