@@ -12,8 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MessageService
-{
+public class MessageService {
     private final MessageRepository messageRepository;
     private final UserService userService;
 
@@ -22,11 +21,9 @@ public class MessageService
      * Validates that users are friends before allowing message sending.
      */
     @Transactional
-    public MessageModel sendMessage(String senderId, String receiverId, String content)
-    {
+    public MessageModel sendMessage(String senderId, String receiverId, String content) {
         // Validate users exist and are friends
-        if (!userService.areFriends(senderId, receiverId))
-        {
+        if (!userService.areFriends(senderId, receiverId)) {
             throw new IllegalStateException("You need to be friends with this user to message them!");
         }
 
@@ -37,9 +34,8 @@ public class MessageService
         message.setStatus(MessageModel.MessageStatus.SENT);
         message.prePersist();
 
-        if (!message.isValid())
-        {
-            throw new IllegalArgumentException("Looks like you’re trying to send a message to yourself—try someone else!");
+        if (!message.isValid()) {
+            throw new IllegalArgumentException("Looks like you're trying to send a message to yourself—try someone else!");
         }
         return messageRepository.save(message);
     }
@@ -48,12 +44,10 @@ public class MessageService
      * Retrieve conversation history between two users.
      * Messages are paginated for performance.
      */
-    public Page<MessageModel> getConversationHistory(String user1Id, String user2Id, Pageable pageable)
-    {
+    public Page<MessageModel> getConversationHistory(String user1Id, String user2Id, Pageable pageable) {
         // Verify users exist and are friends
-        if (!userService.areFriends(user1Id, user2Id))
-        {
-            throw new IllegalStateException("It looks like you don’t have a conversation history yet because you’re not friends!");
+        if (!userService.areFriends(user1Id, user2Id)) {
+            throw new IllegalStateException("It looks like you don't have a conversation history yet because you're not friends!");
         }
         return messageRepository.findMessagesBetweenUsers(user1Id, user2Id, pageable);
     }
@@ -62,18 +56,15 @@ public class MessageService
      * Mark a message as delivered when it reaches the recipient's device.
      */
     @Transactional
-    public void markMessageAsDelivered(String messageId, String receiverId)
-    {
+    public void markMessageAsDelivered(String messageId, String receiverId) {
         MessageModel message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new IllegalArgumentException("Message not found"));
 
-        if (!message.getReceiverId().equals(receiverId))
-        {
+        if (!message.getReceiverId().equals(receiverId)) {
             throw new IllegalStateException("User not authorized to mark this message as delivered");
         }
 
-        if (message.getStatus() == MessageModel.MessageStatus.SENT)
-        {
+        if (message.getStatus() == MessageModel.MessageStatus.SENT) {
             message.setStatus(MessageModel.MessageStatus.DELIVERED);
             message.setUpdatedAt(LocalDateTime.now());
             messageRepository.save(message);
@@ -84,18 +75,15 @@ public class MessageService
      * Mark a message as read when the recipient opens it.
      */
     @Transactional
-    public void markMessageAsRead(String messageId, String receiverId)
-    {
+    public void markMessageAsRead(String messageId, String receiverId) {
         MessageModel message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new IllegalArgumentException("Message not found"));
 
-        if (!message.getReceiverId().equals(receiverId))
-        {
+        if (!message.getReceiverId().equals(receiverId)) {
             throw new IllegalStateException("User not authorized to mark this message as read");
         }
 
-        if (message.getStatus() != MessageModel.MessageStatus.READ)
-        {
+        if (message.getStatus() != MessageModel.MessageStatus.READ) {
             message.setStatus(MessageModel.MessageStatus.READ);
             message.setUpdatedAt(LocalDateTime.now());
             messageRepository.save(message);
@@ -105,8 +93,7 @@ public class MessageService
     /**
      * Get all unread messages for a user
      */
-    public List<MessageModel> getUnreadMessages(String userId)
-    {
+    public List<MessageModel> getUnreadMessages(String userId) {
         return messageRepository.findUnreadMessagesForUser(userId);
     }
 
@@ -114,11 +101,10 @@ public class MessageService
      * Delete all messages between two users
      */
     @Transactional
-    public void deleteConversation(String user1Id, String user2Id)
-    {
+    public void deleteConversation(String user1Id, String user2Id) {
         // Verify users exist and are friends
         if (!userService.areFriends(user1Id, user2Id)) {
-            throw new IllegalStateException("There’s no conversation to delete because you’re not friends yet!");
+            throw new IllegalStateException("There's no conversation to delete because you're not friends yet!");
         }
         messageRepository.deleteMessagesBetweenUsers(user1Id, user2Id);
     }
@@ -126,17 +112,45 @@ public class MessageService
     /**
      * Get messages sent by a user
      */
-    public Page<MessageModel> getSentMessages(String userId, Pageable pageable)
-    {
+    public Page<MessageModel> getSentMessages(String userId, Pageable pageable) {
         return messageRepository.findBySenderIdOrderByCreatedAtDesc(userId, pageable);
     }
 
     /**
      * Get messages received by a user
      */
-    public Page<MessageModel> getReceivedMessages(String userId, Pageable pageable)
-    {
+    public Page<MessageModel> getReceivedMessages(String userId, Pageable pageable) {
         return messageRepository.findByReceiverIdOrderByCreatedAtDesc(userId, pageable);
     }
 
+    /**
+     * Get all conversations for a user
+     */
+    public List<MessageModel> getAllUserConversations(String userId, Pageable pageable) {
+        // Get all messages where user is either sender or receiver
+        System.out.println("Fetching conversations for user: " + userId);
+        Page<MessageModel> messagePage = messageRepository.findAllUserMessages(userId, pageable);
+        List<MessageModel> messages = messagePage.getContent();
+        System.out.println("Found " + messages.size() + " messages for user " + userId);
+
+        // Log some sample messages if any exist
+        if (!messages.isEmpty()) {
+            System.out.println("Sample message - First message in list:");
+            System.out.println("ID: " + messages.get(0).getId());
+            System.out.println("Sender: " + messages.get(0).getSenderId());
+            System.out.println("Receiver: " + messages.get(0).getReceiverId());
+            System.out.println("Content: " + messages.get(0).getContent());
+            System.out.println("Status: " + messages.get(0).getStatus());
+            System.out.println("Created At: " + messages.get(0).getCreatedAt());
+        }
+
+        return messages;
+    }
+
+    /**
+     * Get the latest message between two users
+     */
+    public MessageModel getLatestMessage(String user1Id, String user2Id) {
+        return messageRepository.findLatestMessageBetweenUsers(user1Id, user2Id);
+    }
 }

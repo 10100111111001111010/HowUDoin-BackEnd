@@ -10,18 +10,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface MessageRepository extends MongoRepository<MessageModel, String>
-{
+public interface MessageRepository extends MongoRepository<MessageModel, String> {
 
     // Find messages between two users (conversation history)
     @Query("{ $or: [ " +
-            "{ 'sender_id': ?0, 'receiver_id': ?1 }, " +
-            "{ 'sender_id': ?1, 'receiver_id': ?0 } " +
+            "{ 'senderId': ?0, 'receiverId': ?1 }, " +
+            "{ 'senderId': ?1, 'receiverId': ?0 } " +
             "] }")
     Page<MessageModel> findMessagesBetweenUsers(String user1Id, String user2Id, Pageable pageable);
 
     // Find unread messages for a user
-    @Query("{ 'receiver_id': ?0, 'status': { $in: ['SENT', 'DELIVERED'] } }")
+    @Query("{ 'receiverId': ?0, 'status': { $in: ['SENT', 'DELIVERED'] } }")
     List<MessageModel> findUnreadMessagesForUser(String userId);
 
     // Find messages sent by a user
@@ -35,26 +34,26 @@ public interface MessageRepository extends MongoRepository<MessageModel, String>
 
     // Find latest message between two users
     @Query(value = "{ $or: [ " +
-            "{ 'sender_id': ?0, 'receiver_id': ?1 }, " +
-            "{ 'sender_id': ?1, 'receiver_id': ?0 } " +
+            "{ 'senderId': ?0, 'receiverId': ?1 }, " +
+            "{ 'senderId': ?1, 'receiverId': ?0 } " +
             "] }",
-            sort = "{ 'created_at': -1 }")
+            sort = "{ 'createdAt': -1 }")
     MessageModel findLatestMessageBetweenUsers(String user1Id, String user2Id);
+
+    // Find all messages for a user (either as sender or receiver)
+    @Query("{ $or: [ " +
+            "{ 'senderId': ?0 }, " +
+            "{ 'receiverId': ?0 } " +
+            "] }")
+    Page<MessageModel> findAllUserMessages(String userId, Pageable pageable);
 
     // Count unread messages for a user
     long countByReceiverIdAndStatusIn(String receiverId, List<MessageModel.MessageStatus> statuses);
 
-    // Find all messages by status for a receiver
-    List<MessageModel> findByReceiverIdAndStatus(String receiverId, MessageModel.MessageStatus status);
-
-    // Update message status
-    @Query("{ '_id': ?0 }")
-    void updateMessageStatus(String messageId, MessageModel.MessageStatus newStatus);
-
     // Delete all messages between two users
     @Query(value = "{ $or: [ " +
-            "{ 'sender_id': ?0, 'receiver_id': ?1 }, " +
-            "{ 'sender_id': ?1, 'receiver_id': ?0 } " +
+            "{ 'senderId': ?0, 'receiverId': ?1 }, " +
+            "{ 'senderId': ?1, 'receiverId': ?0 } " +
             "] }")
     void deleteMessagesBetweenUsers(String user1Id, String user2Id);
 }
