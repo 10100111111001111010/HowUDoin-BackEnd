@@ -43,13 +43,4 @@ Howudoin is a real-time messaging application that enables users to communicate 
 - **Database:** MongoDB
 - **Authentication:** JWT (JSON Web Tokens)
 
-## Contributing
-This is a collaborative project. Please ensure you:
-1. Create feature branches for new development
-2. Follow the existing code style
-3. Write clear commit messages
-4. Test your changes before pushing
-
-## Project Status
-Phase I - In Development
 
