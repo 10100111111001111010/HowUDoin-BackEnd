@@ -5,13 +5,7 @@ A WhatsApp-like messaging application built with Spring Boot and MongoDB.
 ## Project Overview
 Howudoin is a real-time messaging application that enables users to communicate one-on-one and in groups. The backend is built using Spring Boot with MongoDB as the database.
 
-## Project Timeline
-- **Phase I Deadline:** November 21st, 2024
-- **Phase II Deadline:** December 27th, 2024
-
 ## Features
-
-### Core Features
 - **User Registration and Login**
   - Email and password-based authentication
   - JWT token implementation
